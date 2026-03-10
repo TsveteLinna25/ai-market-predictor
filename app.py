@@ -8,10 +8,13 @@ from sklearn.linear_model import LinearRegression
 st.set_page_config(page_title="AI Market Sentiment & Price Predictor", layout="wide")
 st.title("AI Market Sentiment & Price Predictor")
 
-# ----------------- USER INPUT -----------------
-ticker = st.text_input("Enter stock or crypto ticker", "AAPL")
+# USER INPUT
+ticker = st.selectbox(
+    "Select a stock",
+    ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "NVDA", "META"]
+)
 
-# ----------------- FETCH STOCK DATA -----------------
+# FETCH STOCK DATA 
 data = yf.download(ticker, period="1y")
 if data.empty:
     st.error("No data found for this ticker.")
@@ -21,21 +24,20 @@ if data.empty:
 if isinstance(data.columns, pd.MultiIndex):
     data.columns = data.columns.get_level_values(0)
 
-# ----------------- HISTORICAL PRICE TABLE -----------------
+# HISTORICAL PRICE TABLE
 st.subheader(f"{ticker} Historical Price Data (Last 10 Days)")
 st.dataframe(data[['Open','High','Low','Close','Volume']].tail(10))
 
-# ----------------- INTERACTIVE PRICE & VOLUME CHART -----------------
+# INTERACTIVE PRICE & VOLUME CHART 
 st.subheader("Price & Volume Chart")
 chart_data = data[['Close','Volume']].copy()
 chart_data['Date'] = chart_data.index
 chart_data = chart_data.set_index('Date')
 st.line_chart(chart_data)
 
-# ----------------- NEWS SENTIMENT -----------------
+#  NEWS SENTIMENT 
 st.subheader("News Sentiment Analysis")
 
-# INSERT YOUR REAL NEWSAPI KEY HERE
 NEWS_API_KEY = "176819721aca4dcdbe4940d8fbe871f5"
 newsapi = NewsApiClient(api_key=NEWS_API_KEY)
 
@@ -71,7 +73,7 @@ else:
     avg_score = 0
     st.write("No news found for sentiment analysis.")
 
-# ----------------- SENTIMENT TABLE -----------------
+# SENTIMENT TABLE 
 st.subheader("Recent News Sentiment Scores")
 if scores:
     df_sentiment = pd.DataFrame({
@@ -80,12 +82,12 @@ if scores:
     })
     st.dataframe(df_sentiment)
 
-# ----------------- MACHINE LEARNING PREDICTION -----------------
+# MACHINE LEARNING PREDICTION
 st.subheader("Tomorrow Price Prediction")
 
-# Prepare data for ML
+
 data_ml = data.copy()
-data_ml['Sentiment'] = avg_score  # using today's sentiment
+data_ml['Sentiment'] = avg_score 
 data_ml['Prev_Close'] = data_ml['Close'].shift(1)
 data_ml['Target'] = data_ml['Close'].shift(-1)
 data_ml = data_ml.dropna()
